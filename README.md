@@ -2,7 +2,7 @@
 
 > An intelligent system that parses multi-vendor firewall rule sets, detects conflicts and redundancies using graph-based analysis, reorders rules using a machine learning model trained on traffic patterns, and exports a ranked audit report with actionable recommendations.
 
-![CI](https://github.com/aditya-amrale/firewall_optimizer/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/aditya-amrale/firewall-optimizer/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Tests](https://img.shields.io/badge/tests-124%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
