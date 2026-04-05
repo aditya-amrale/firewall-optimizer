@@ -1,0 +1,320 @@
+{
+  "generated_at": "2026-04-03T16:27:18.391977",
+  "summary": {
+    "total_rules": 7,
+    "total_recommendations": 6,
+    "critical_count": 2,
+    "high_count": 2
+  },
+  "rules": [
+    {
+      "rule_id": "catch_all_allow",
+      "source": "test",
+      "priority": 5,
+      "line_number": null,
+      "src_ip": "0.0.0.0/0",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": null,
+      "protocol": "all",
+      "action": "ALLOW",
+      "comment": null,
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    },
+    {
+      "rule_id": "deny_rfc1918",
+      "source": "test",
+      "priority": 10,
+      "line_number": null,
+      "src_ip": "10.0.0.0/8",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": null,
+      "protocol": "all",
+      "action": "DENY",
+      "comment": null,
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    },
+    {
+      "rule_id": "allow_ssh_mgmt",
+      "source": "test",
+      "priority": 20,
+      "line_number": null,
+      "src_ip": "10.10.0.0/16",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": "22",
+      "protocol": "tcp",
+      "action": "ALLOW",
+      "comment": "Mgmt SSH",
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    },
+    {
+      "rule_id": "allow_ssh_dup",
+      "source": "test",
+      "priority": 30,
+      "line_number": null,
+      "src_ip": "10.10.0.0/16",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": "22",
+      "protocol": "tcp",
+      "action": "ALLOW",
+      "comment": null,
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    },
+    {
+      "rule_id": "allow_http",
+      "source": "test",
+      "priority": 40,
+      "line_number": null,
+      "src_ip": "0.0.0.0/0",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": "80",
+      "protocol": "tcp",
+      "action": "ALLOW",
+      "comment": "HTTP",
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    },
+    {
+      "rule_id": "allow_https",
+      "source": "test",
+      "priority": 50,
+      "line_number": null,
+      "src_ip": "0.0.0.0/0",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": "443",
+      "protocol": "tcp",
+      "action": "ALLOW",
+      "comment": "HTTPS",
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    },
+    {
+      "rule_id": "allow_dns",
+      "source": "test",
+      "priority": 60,
+      "line_number": null,
+      "src_ip": "0.0.0.0/0",
+      "dst_ip": "0.0.0.0/0",
+      "src_port": null,
+      "dst_port": "53",
+      "protocol": "udp",
+      "action": "ALLOW",
+      "comment": "DNS",
+      "chain": null,
+      "interface": null,
+      "tags": [],
+      "raw": null
+    }
+  ],
+  "recommendations": [
+    {
+      "rec_id": "REC-0001",
+      "fix_type": "REVIEW_RULE",
+      "severity": "CRITICAL",
+      "effort": "HIGH",
+      "impact_score": 10.0,
+      "title": "Resolve contradiction between 'catch_all_allow' and 'deny_rfc1918'",
+      "description": "Rule 'catch_all_allow' (priority 5, ALLOW) covers a superset of the traffic matched by rule 'deny_rfc1918' (priority 10, DENY). The DENY in rule 'deny_rfc1918' will NEVER take effect \u2014 all matching packets are already decided by rule 'catch_all_allow'.",
+      "suggestion": "Re-examine priorities: if 'deny_rfc1918' (DENY) should fire, move it before 'catch_all_allow' (priority 5) or narrow rule 'catch_all_allow''s match scope.",
+      "affected_rules": [
+        "catch_all_allow",
+        "deny_rfc1918"
+      ],
+      "source_findings": [
+        "CONTRADICTION"
+      ]
+    },
+    {
+      "rec_id": "REC-0002",
+      "fix_type": "REVIEW_RULE",
+      "severity": "CRITICAL",
+      "effort": "HIGH",
+      "impact_score": 10.0,
+      "title": "Resolve contradiction between 'deny_rfc1918' and 'allow_ssh_mgmt'",
+      "description": "Rule 'deny_rfc1918' (priority 10, DENY) covers a superset of the traffic matched by rule 'allow_ssh_mgmt' (priority 20, ALLOW). The ALLOW in rule 'allow_ssh_mgmt' will NEVER take effect \u2014 all matching packets are already decided by rule 'deny_rfc1918'.",
+      "suggestion": "Re-examine priorities: if 'allow_ssh_mgmt' (ALLOW) should fire, move it before 'deny_rfc1918' (priority 10) or narrow rule 'deny_rfc1918''s match scope.",
+      "affected_rules": [
+        "deny_rfc1918",
+        "allow_ssh_mgmt"
+      ],
+      "source_findings": [
+        "CONTRADICTION"
+      ]
+    },
+    {
+      "rec_id": "REC-0003",
+      "fix_type": "ADD_DEFAULT_DENY",
+      "severity": "HIGH",
+      "effort": "LOW",
+      "impact_score": 8.5,
+      "title": "Add explicit default-deny rule at the end",
+      "description": "The rule set has no explicit default-deny rule as its final entry. Without it, traffic that doesn't match any rule falls through to the platform's implicit default \u2014 which may be ALLOW on some systems (e.g., AWS SGs, iptables ACCEPT policy). An explicit default-deny closes this gap and makes intent clear.",
+      "suggestion": "Add as the final rule: src=0.0.0.0/0, dst=0.0.0.0/0, port=any, proto=all, action=DENY. In iptables: -A INPUT -j DROP",
+      "affected_rules": [],
+      "source_findings": [
+        "HEURISTIC_NO_DEFAULT_DENY"
+      ]
+    },
+    {
+      "rec_id": "REC-0004",
+      "fix_type": "REMOVE_RULE",
+      "severity": "HIGH",
+      "effort": "LOW",
+      "impact_score": 8.0,
+      "title": "Remove shadowed rule 'allow_ssh_mgmt'",
+      "description": "Rule 'catch_all_allow' (priority 5, 0.0.0.0/0\u21920.0.0.0/0:any [ALLOW]) matches every packet that rule 'allow_ssh_mgmt' (priority 20) would match. Rule 'allow_ssh_mgmt' is never evaluated.",
+      "suggestion": "Remove rule 'allow_ssh_mgmt' \u2014 it is dead code shadowed by 'catch_all_allow'.",
+      "affected_rules": [
+        "allow_ssh_mgmt",
+        "catch_all_allow"
+      ],
+      "source_findings": [
+        "SHADOW"
+      ]
+    },
+    {
+      "rec_id": "REC-0005",
+      "fix_type": "NARROW_RULE",
+      "severity": "MEDIUM",
+      "effort": "MEDIUM",
+      "impact_score": 6.3,
+      "title": "Narrow catch-all ALLOW rule 'catch_all_allow'",
+      "description": "Rule 'catch_all_allow' (priority 5) allows ALL traffic from any source to any destination on any port. This is a catch-all ALLOW rule \u2014 every packet reaching this rule will be unconditionally permitted.",
+      "suggestion": "Replace with specific ALLOW rules for known-good traffic, then add an explicit default-deny at the end.",
+      "affected_rules": [
+        "catch_all_allow"
+      ],
+      "source_findings": [
+        "PERMISSIVE"
+      ]
+    },
+    {
+      "rec_id": "REC-0006",
+      "fix_type": "REMOVE_RULE",
+      "severity": "MEDIUM",
+      "effort": "LOW",
+      "impact_score": 5.0,
+      "title": "Remove duplicate rule 'allow_ssh_dup'",
+      "description": "Rule 'allow_ssh_dup' (priority 30) is structurally identical to rule 'allow_ssh_mgmt' (priority 20). Both match 10.10.0.0/16 \u2192 0.0.0.0/0:22 [tcp] with action ALLOW.",
+      "suggestion": "Remove rule 'allow_ssh_dup' \u2014 it is never evaluated.",
+      "affected_rules": [
+        "allow_ssh_dup"
+      ],
+      "source_findings": [
+        "DUPLICATE"
+      ]
+    }
+  ],
+  "conflict_report": {
+    "total_rules": 7,
+    "finding_count": 8,
+    "shadow_count": 1,
+    "redundant_count": 0,
+    "contradiction_count": 5,
+    "duplicate_count": 1,
+    "permissive_count": 1,
+    "findings": [
+      {
+        "type": "CONTRADICTION",
+        "severity": "CRITICAL",
+        "rule_a_id": "catch_all_allow",
+        "rule_b_id": "deny_rfc1918",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rule 'catch_all_allow' (priority 5, ALLOW) covers a superset of the traffic matched by rule 'deny_rfc1918' (priority 10, DENY). The DENY in rule 'deny_rfc1918' will NEVER take effect \u2014 all matching packets are already decided by rule 'catch_all_allow'.",
+        "suggestion": "Re-examine priorities: if 'deny_rfc1918' (DENY) should fire, move it before 'catch_all_allow' (priority 5) or narrow rule 'catch_all_allow''s match scope."
+      },
+      {
+        "type": "CONTRADICTION",
+        "severity": "CRITICAL",
+        "rule_a_id": "deny_rfc1918",
+        "rule_b_id": "allow_ssh_mgmt",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rule 'deny_rfc1918' (priority 10, DENY) covers a superset of the traffic matched by rule 'allow_ssh_mgmt' (priority 20, ALLOW). The ALLOW in rule 'allow_ssh_mgmt' will NEVER take effect \u2014 all matching packets are already decided by rule 'deny_rfc1918'.",
+        "suggestion": "Re-examine priorities: if 'allow_ssh_mgmt' (ALLOW) should fire, move it before 'deny_rfc1918' (priority 10) or narrow rule 'deny_rfc1918''s match scope."
+      },
+      {
+        "type": "CONTRADICTION",
+        "severity": "CRITICAL",
+        "rule_a_id": "deny_rfc1918",
+        "rule_b_id": "allow_http",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rules 'deny_rfc1918' (DENY) and 'allow_http' (ALLOW) have opposite actions for overlapping traffic. Overlapping on: source IPs overlap (10.0.0.0/8 \u2229 0.0.0.0/0), destination IPs overlap (0.0.0.0/0 \u2229 0.0.0.0/0), destination ports overlap (any \u2229 80). The outcome depends entirely on rule ordering.",
+        "suggestion": "Narrow one of the rules to eliminate the overlap, or confirm the ordering is intentional and document it."
+      },
+      {
+        "type": "CONTRADICTION",
+        "severity": "CRITICAL",
+        "rule_a_id": "deny_rfc1918",
+        "rule_b_id": "allow_https",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rules 'deny_rfc1918' (DENY) and 'allow_https' (ALLOW) have opposite actions for overlapping traffic. Overlapping on: source IPs overlap (10.0.0.0/8 \u2229 0.0.0.0/0), destination IPs overlap (0.0.0.0/0 \u2229 0.0.0.0/0), destination ports overlap (any \u2229 443). The outcome depends entirely on rule ordering.",
+        "suggestion": "Narrow one of the rules to eliminate the overlap, or confirm the ordering is intentional and document it."
+      },
+      {
+        "type": "CONTRADICTION",
+        "severity": "CRITICAL",
+        "rule_a_id": "deny_rfc1918",
+        "rule_b_id": "allow_dns",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rules 'deny_rfc1918' (DENY) and 'allow_dns' (ALLOW) have opposite actions for overlapping traffic. Overlapping on: source IPs overlap (10.0.0.0/8 \u2229 0.0.0.0/0), destination IPs overlap (0.0.0.0/0 \u2229 0.0.0.0/0), destination ports overlap (any \u2229 53). The outcome depends entirely on rule ordering.",
+        "suggestion": "Narrow one of the rules to eliminate the overlap, or confirm the ordering is intentional and document it."
+      },
+      {
+        "type": "SHADOW",
+        "severity": "HIGH",
+        "rule_a_id": "catch_all_allow",
+        "rule_b_id": "allow_ssh_mgmt",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rule 'catch_all_allow' (priority 5, 0.0.0.0/0\u21920.0.0.0/0:any [ALLOW]) matches every packet that rule 'allow_ssh_mgmt' (priority 20) would match. Rule 'allow_ssh_mgmt' is never evaluated.",
+        "suggestion": "Remove rule 'allow_ssh_mgmt' \u2014 it is dead code shadowed by 'catch_all_allow'."
+      },
+      {
+        "type": "PERMISSIVE",
+        "severity": "MEDIUM",
+        "rule_a_id": "catch_all_allow",
+        "rule_b_id": "catch_all_allow",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rule 'catch_all_allow' (priority 5) allows ALL traffic from any source to any destination on any port. This is a catch-all ALLOW rule \u2014 every packet reaching this rule will be unconditionally permitted.",
+        "suggestion": "Replace with specific ALLOW rules for known-good traffic, then add an explicit default-deny at the end."
+      },
+      {
+        "type": "DUPLICATE",
+        "severity": "MEDIUM",
+        "rule_a_id": "allow_ssh_mgmt",
+        "rule_b_id": "allow_ssh_dup",
+        "rule_a_raw": null,
+        "rule_b_raw": null,
+        "reason": "Rule 'allow_ssh_dup' (priority 30) is structurally identical to rule 'allow_ssh_mgmt' (priority 20). Both match 10.10.0.0/16 \u2192 0.0.0.0/0:22 [tcp] with action ALLOW.",
+        "suggestion": "Remove rule 'allow_ssh_dup' \u2014 it is never evaluated."
+      }
+    ]
+  }
+}
